@@ -1,0 +1,17 @@
+dec_belt_cfb_plain.txt
+dec_magma_cfb_mac.txt
+dec_magma_ecb_mac.txt
+dec_magma_gamma_mac.txt
+enc_belt_cfb_plain.bin
+enc_magma_cfb_mac.bin
+enc_magma_ecb_mac.bin
+enc_magma_gamma_mac.bin
+dec_belt_ecb_plain.txt
+dec_magma_cfb_plain.txt
+dec_magma_ecb_plain.txt
+dec_magma_gamma_plain.txt
+enc_belt_ecb_plain.bin
+enc_magma_cfb_plain.bin
+enc_magma_ecb_plain.bin
+enc_magma_gamma_plain.bin
+CipherHub
