@@ -29,7 +29,9 @@ The resulting CipherHub binary is self-contained.
 
 ## Usage
 
+```
 ./CipherHub [flags]
+```
 
 ### Flags
 
