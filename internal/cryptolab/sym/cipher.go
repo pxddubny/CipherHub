@@ -1,4 +1,4 @@
-package cryptolab
+package sym
 
 type BlockCipher interface {
     BlockSize() int

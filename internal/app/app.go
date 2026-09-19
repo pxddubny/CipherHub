@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/pxddubny/CipherHub/internal/config"
-	"github.com/pxddubny/CipherHub/internal/cryptolab"
+	"github.com/pxddubny/CipherHub/internal/cryptolab/sym"
 )
 
 func Run(cfg *config.Config) (*uint32, error) {
@@ -17,36 +17,36 @@ func Run(cfg *config.Config) (*uint32, error) {
 	var result []byte
 	switch {
 	case cfg.Mode == "encrypt" && cfg.Algorithm == "ecb":
-		ecb := cryptolab.NewECB(cfg.BlockCipher)
+		ecb := sym.NewECB(cfg.BlockCipher)
 		result = ecb.Encrypt(plain)
 
 	case cfg.Mode == "decrypt" && cfg.Algorithm == "ecb":
-		ecb := cryptolab.NewECB(cfg.BlockCipher)
+		ecb := sym.NewECB(cfg.BlockCipher)
 		result = ecb.Decrypt(plain)
 
 	case cfg.Mode == "encrypt" && cfg.Algorithm == "gamma":
-		gamma, err := cryptolab.NewGamma(cfg.BlockCipher, cfg.Iv)
+		gamma, err := sym.NewGamma(cfg.BlockCipher, cfg.Iv)
 		if err != nil {
 			return nil, err
 		}
 		result = gamma.Encrypt(plain)
 
 	case cfg.Mode == "decrypt" && cfg.Algorithm == "gamma":
-		gamma, err := cryptolab.NewGamma(cfg.BlockCipher, cfg.Iv)
+		gamma, err := sym.NewGamma(cfg.BlockCipher, cfg.Iv)
 		if err != nil {
 			return nil, err
 		}
 		result = gamma.Decrypt(plain)
 
 	case cfg.Mode == "encrypt" && cfg.Algorithm == "cfb":
-		cfb, err := cryptolab.NewCFB(cfg.BlockCipher, cfg.Iv)
+		cfb, err := sym.NewCFB(cfg.BlockCipher, cfg.Iv)
 		if err != nil {
 			return nil, err
 		}
 		result = cfb.Encrypt(plain)
 
 	case cfg.Mode == "decrypt" && cfg.Algorithm == "cfb":
-		cfb, err := cryptolab.NewCFB(cfg.BlockCipher, cfg.Iv)
+		cfb, err := sym.NewCFB(cfg.BlockCipher, cfg.Iv)
 		if err != nil {
 			return nil, err
 		}

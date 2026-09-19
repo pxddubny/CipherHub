@@ -1,10 +1,10 @@
 package config
 
-import "github.com/pxddubny/CipherHub/internal/cryptolab"
+import "github.com/pxddubny/CipherHub/internal/cryptolab/sym"
 
 type Config struct {
 	Mode string
-	BlockCipher cryptolab.BlockCipher
+	BlockCipher sym.BlockCipher
 	Algorithm string
 	Input string
 	Output string

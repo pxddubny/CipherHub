@@ -6,7 +6,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/pxddubny/CipherHub/internal/cryptolab"
+	"github.com/pxddubny/CipherHub/internal/cryptolab/sym"
 )
 
 const (
@@ -84,12 +84,12 @@ func Parse(args []string) (*Config, error) {
 	}, nil
 }
 
-func newBlockCipher(name string, key []byte) (cryptolab.BlockCipher, error) {
+func newBlockCipher(name string, key []byte) (sym.BlockCipher, error) {
 	switch name {
 	case "magma":
-		return cryptolab.NewMagma(key)
+		return sym.NewMagma(key)
 	case "belt":
-		return cryptolab.NewBelt(key)
+		return sym.NewBelt(key)
 	default:
 		return nil, fmt.Errorf("unknown block cipher: %s", name)
 	}
