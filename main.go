@@ -27,15 +27,15 @@ func main() {
 	}
 
 	if mac != nil {
-		fmt.Printf("Имитовставка: 0x%08X\n", *mac)
+		fmt.Printf("MAC: 0x%08X\n", *mac)
 	}
 }
 
-func run(args []string) (*uint32,error) {
+func run(args []string) (*uint32, error) {
 	cfg, err := config.Parse(args)
-		if err != nil {
-			return nil, err
-		}
+	if err != nil {
+		return nil, err
+	}
 
-	return app.Run(cfg) 
+	return app.Run(cfg)
 }
