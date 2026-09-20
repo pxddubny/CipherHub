@@ -1,8 +1,9 @@
 package sym
 
 import (
-	"bytes"
 	"fmt"
+
+	"github.com/pxddubny/CipherHub/internal/padding"
 )
 
 type ecb struct {
@@ -15,7 +16,7 @@ func NewECB(bc BlockCipher) Mode {
 
 func (e *ecb) Encrypt(src []byte) []byte {
 	bs := e.bc.BlockSize()
-	padded := pkcs7Pad(src, bs)
+	padded := padding.Pad(src, bs)
 	out := make([]byte, len(padded))
 
 	for i := 0; i < len(padded); i += bs {
@@ -34,26 +35,5 @@ func (e *ecb) Decrypt(src []byte) []byte {
 	for i := 0; i < len(src); i += bs {
 		e.bc.DecryptBlock(out[i:i+bs], src[i:i+bs])
 	}
-	return pkcs7Unpad(out)
-}
-
-func pkcs7Pad(data []byte, blockSize int) []byte {
-	padding := blockSize - len(data)%blockSize
-	padText := bytes.Repeat([]byte{byte(padding)}, padding)
-
-	return append(data, padText...)
-}
-
-func pkcs7Unpad(data []byte) []byte {
-	if len(data) == 0 {
-		return data
-	}
-
-	padding := int(data[len(data)-1])
-
-	if padding > len(data) {
-		panic("неверное дополнение")
-	}
-
-	return data[:len(data)-padding]
+	return padding.Unpad(out)
 }
