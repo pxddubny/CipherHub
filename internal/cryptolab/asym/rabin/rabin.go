@@ -3,8 +3,6 @@ package rabin
 import (
 	"errors"
 	"math/big"
-
-	"github.com/pxddubny/CipherHub/internal/padding"
 )
 
 const blockMarker = 0x02
@@ -19,28 +17,27 @@ func (k *PublicKey) Encrypt(plaintext []byte) ([]byte, error) {
 	}
 
 	nBytes := (k.N.BitLen() + 7) / 8
-	blockBytes := nBytes - 1
-	if blockBytes < 1 {
-		return nil, errors.New("rabin: key is too small")
-	}
-	dataBytes := blockBytes - 1
+	dataBytes := nBytes - 2
 	if dataBytes < 1 {
-		return nil, errors.New("rabin: key is too small for padding")
+		return nil, errors.New("rabin: key is too small")
 	}
 
 	if len(plaintext) == 0 {
 		return nil, nil
 	}
 
-	padded := padding.Pad(plaintext, dataBytes)
-
-	out := make([]byte, 0, (len(padded)/dataBytes)*nBytes)
-	for offset := 0; offset < len(padded); offset += dataBytes {
-		block := padded[offset : offset+dataBytes]
+	out := make([]byte, 0, ((len(plaintext)+dataBytes-1)/dataBytes)*nBytes)
+	for offset := 0; offset < len(plaintext); offset += dataBytes {
+		end := offset + dataBytes
+		if end > len(plaintext) {
+			end = len(plaintext)
+		}
+		chunk := plaintext[offset:end]
 
 		mBytes := make([]byte, nBytes)
 		mBytes[0] = blockMarker
-		copy(mBytes[1:], block)
+		mBytes[1] = byte(len(chunk))
+		copy(mBytes[2:], chunk)
 
 		m := new(big.Int).SetBytes(mBytes)
 		if m.Cmp(k.N) >= 0 {
@@ -74,8 +71,6 @@ func (k *PrivateKey) Decrypt(ciphertext []byte) ([]byte, error) {
 	}
 
 	nBytes := (k.Public.N.BitLen() + 7) / 8
-	blockBytes := nBytes - 1
-
 	if len(ciphertext)%nBytes != 0 {
 		return nil, errors.New("rabin: ciphertext length is not a multiple of block size")
 	}
@@ -89,7 +84,7 @@ func (k *PrivateKey) Decrypt(ciphertext []byte) ([]byte, error) {
 			return nil, err
 		}
 
-		block, err := selectBlock(roots, nBytes, blockBytes)
+		block, err := selectBlock(roots, nBytes)
 		if err != nil {
 			return nil, err
 		}
@@ -139,29 +134,35 @@ func (k *PrivateKey) squareRoots(c *big.Int) ([]*big.Int, error) {
 	return []*big.Int{r, negR, s, negS}, nil
 }
 
-func selectBlock(roots []*big.Int, nBytes, blockBytes int) ([]byte, error) {
+func selectBlock(roots []*big.Int, nBytes int) ([]byte, error) {
+	dataBytes := nBytes - 2
+	if dataBytes < 1 {
+		return nil, errors.New("rabin: key is too small")
+	}
+
 	for _, r := range roots {
 		rBytes := r.FillBytes(make([]byte, nBytes))
 		if rBytes[0] != blockMarker {
 			continue
 		}
-		block := rBytes[1:]
 
-		padLen := int(block[len(block)-1])
-		if padLen == 0 || padLen > blockBytes {
+		dataLen := int(rBytes[1])
+		if dataLen < 0 || dataLen > dataBytes {
 			continue
 		}
-		valid := true
-		for i := blockBytes - padLen; i < blockBytes; i++ {
-			if block[i] != byte(padLen) {
-				valid = false
+
+		validTail := true
+		for i := 2 + dataLen; i < nBytes; i++ {
+			if rBytes[i] != 0 {
+				validTail = false
 				break
 			}
 		}
-		if !valid {
+		if !validTail {
 			continue
 		}
-		return block[:blockBytes-padLen], nil
+
+		return rBytes[2 : 2+dataLen], nil
 	}
 	return nil, errors.New("rabin: no valid root found")
 }

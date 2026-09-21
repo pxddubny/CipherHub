@@ -26,7 +26,7 @@ func (g *gamma) crypt(input []byte) []byte {
 	out := make([]byte, len(input))
 
 	state := make([]byte, bs)
-	copy(state, g.iv)       // state = IV
+	copy(state, g.iv)
 
 	gammaBlock := make([]byte, bs)
 

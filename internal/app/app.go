@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"io"
 	"os"
 
@@ -9,6 +10,17 @@ import (
 )
 
 func Run(cfg *config.Config) (*uint32, error) {
+	switch cfg.Family {
+	case config.FamilySym:
+		return runSym(cfg)
+	case config.FamilyAsym:
+		return runAsym(cfg)
+	default:
+		return nil, errors.New("unknown crypto family: " + string(cfg.Family))
+	}
+}
+
+func runSym(cfg *config.Config) (*uint32, error) {
 	plain, err := readFile(cfg.Input)
 	if err != nil {
 		return nil, err
@@ -58,15 +70,45 @@ func Run(cfg *config.Config) (*uint32, error) {
 	}
 
 	if cfg.MAC {
-    if m, ok := cfg.BlockCipher.(interface{ GenerateMAC([]byte) uint32 }); ok {
-        var mac uint32
-        if cfg.Mode == "encrypt" {
-            mac = m.GenerateMAC(plain)
-        } else {
-            mac = m.GenerateMAC(result)
-        }
-				return &mac, err
-    }
+		if m, ok := cfg.BlockCipher.(interface{ GenerateMAC([]byte) uint32 }); ok {
+			var mac uint32
+			if cfg.Mode == "encrypt" {
+				mac = m.GenerateMAC(plain)
+			} else {
+				mac = m.GenerateMAC(result)
+			}
+			return &mac, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func runAsym(cfg *config.Config) (*uint32, error) {
+	data, err := readFile(cfg.Input)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []byte
+	switch cfg.Mode {
+	case "encrypt":
+		if cfg.PublicKey == nil {
+			return nil, errors.New("encryption requires a public key")
+		}
+		result, err = cfg.PublicKey.Encrypt(data)
+	case "decrypt":
+		if cfg.PrivateKey == nil {
+			return nil, errors.New("decryption requires a private key")
+		}
+		result, err = cfg.PrivateKey.Decrypt(data)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if err := writeFile(cfg.Output, result); err != nil {
+		return nil, err
 	}
 
 	return nil, nil
